@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 source('validelements.R')
 library(caret)
+library(rattle)
+library(ggplot2)
 ```
 
 # Introduction
@@ -136,3 +138,51 @@ knitr::kable(ctot,
 The class distribution is almost balanced except for the Class `A` that contains a slight higher number of samples.
 As we can see the Class distribuition has been preserved by the `createDataPartition` function.
 
+# Model Cross Validation
+
+As we will compare different algorithms, a preset Cross Validation parameter is set for all different models. A basic cross validation choise for this kind of dataset is 5-fold cross-validation to estimate accuracy. In order to seek a better estimate, each algorithm will be repeated 3 times.  
+
+```{r, eval=F, echo=T}
+control <- trainControl(method = "repeatedcv", 
+                        number = 5, 
+                        repeats = 3,
+                        verboseIter = TRUE)
+metric <- "Accuracy"
+```
+
+## Classification Tree
+
+The first model is the simplest one: a classification tree. I am using the `train` function from `caret` library using `rpart` method.
+
+```{r, echo=TRUE, eval=FALSE}
+set.seed(111)
+
+start.time <- Sys.time()
+mod.CT <- train(classe ~., 
+                data = train.set,
+                method = 'rpart',
+                tuneLength = 25,
+                trControl = control,
+                metric = metric)
+
+end.time <- Sys.time()
+time.takenCT <- end.time - start.time
+time.takenCT
+
+save(mod.CT, file = "modeCT.RData")
+save(time.takenCT, file = "timeCT.RData")
+```
+
+```{r, echo=FALSE, fig.align="centre"}
+set.seed(111)
+
+load("modeCT.RData")
+# fancyRpartPlot(mod.CT$finalModel)
+conf.matrixCT <- confusionMatrix(predict(mod.CT, 
+                                         newdata = validation.set),
+                                 validation.set$classe)
+
+
+round(conf.matrixCT$overall, 2)
+round(conf.matrixCT$byClass, 2)
+```
