@@ -3,8 +3,8 @@ title: "Practical Machine Learning - Final Assignment"
 author: "Paolo Coraggio"
 date: "27/12/2019"
 output:
-  word_document: default
   html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,9 +15,7 @@ library(rattle)
 library(ggplot2)
 ```
 
-# Introduction
-
-## Project Outline
+# Project Outline
 
 The goal of the final assignment is to use data from accelerometers placed on the belt, forearm, arm, and dumbell of 6 participants of an experiment to build a predictive model about the manner in which they did the exercise. 
 
@@ -378,5 +376,12 @@ Finally, the model is applied to predict the data in the test set.
 
 ```{r}
 predict(mod.RF, newdata = testset)
-#knitr::kable(t(predict(mod.RF, newdata = testset)))
 ```
+
+# References and Future work
+
+* The data used are part of the [WLE dataset](http://groupware.les.inf.puc-rio.br/har )
+* For the Random Forest tuning with caret I read [James Brownlee blog page] (https://machinelearningmastery.com/tune-machine-learning-algorithms-in-r/)
+* A very helpful resource for this project has been [Applied Predictive Modeling](http://appliedpredictivemodeling.com/) by Max Kuhn and Kjell Johnson (both book and related blog)
+
+I will keep the project updated on the GitHub repository as I will use the proposed assignment to perform further analysis (e.g. PCA and prediction based on temporal series). 
