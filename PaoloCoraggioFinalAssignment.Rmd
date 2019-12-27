@@ -1,0 +1,138 @@
+---
+title: "Practical Machine Learning - Final Assignment"
+author: "Paolo Coraggio"
+date: "27/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('validelements.R')
+library(caret)
+```
+
+# Introduction
+
+## Project Outline
+
+The goal of the final assignment is to use data from accelerometers placed on the belt, forearm, arm, and dumbell of 6 participants of an experiment to build a predictive model about the manner in which they did the exercise. 
+
+
+In order to fulfil the goal, the data collected in http://groupware.les.inf.puc-rio.br/har were loaded explored and filtered. Then, 4 different predictive models (using Regression Tree, Random Forest, Bagging and Boosting algorithm) build and compared using a similar setting. The model that resulted with higerh accuracy was further improved and, finally, used on the test dataset. 
+
+This final report will describe how the model was built how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
+## Exploratory data analysis
+
+In order to build the predective model, the 
+
+### Loading the data 
+
+The main source of the data is http://groupware.les.inf.puc-rio.br/har. The data were downloaded in a local folder and then loaded in two different datasets: `dataset` for the training and `testset` for the testing sets
+
+```{r, echo=FALSE}
+dataset <- read.csv('./Data/pml-training.csv')
+testset <- read.csv('./Data/pml-testing.csv')
+```
+
+The datasets have the following size:
+
+```{r, echo=FALSE}
+dim(dataset) 
+dim(testset)
+```
+
+The `dataset` data frame consists of $19622$ datapoint of $160$ recorded features and the `testset` it's just $20$ data points. 
+
+### Exploratoring Data Analysis and Feature Extraction
+
+The first step is to check what is the percentage of available data for each feature as the data.frame columns may contain not valid elements. I created a `validelements` function that, for each data.frame column, count their valid elements (i.e. not empty, NaN or `#DIV/0!`). I run the function on the `dataset` data.frame.
+
+```{r, echo=FALSE, fig.align="centre", fig.height=3.0}
+p.validelements <- c()
+p.name <- c()
+
+for(i in names(dataset))
+{
+    p.validelements <- c(p.validelements,valid.elements(dataset[[i]]))
+    p.name <- c(p.name,i)
+}
+
+plot(p.validelements, pch = 3, col = "darkgrey", 
+     xlab = "Feature Index", ylab = "Percentage of valid values")
+```
+
+The plot shows that data.frame variables contain or $100\%$ valide data or very few (less than $5\%$ of valide data). The features containing less the $5/%$ of data will be discharged.
+
+Moreover, we can further exclude the first 7 features as they containg temporal information that has been chosen not to consider as the analysis is not considering a forcastin approach (that would be interesting to study further but it's out of scope the present project).  
+
+```{r, eval=FALSE}
+dataset <- dataset[, p.validelements > 0.05]
+testset <- testset[, p.validelements > 0.05]
+
+## trimming the first 7 elements
+
+dataset <- dataset[-c(1:7)]
+testset <- testset[-c(1:7)]
+```
+
+```{r, echo=FALSE}
+dataset <- dataset[, p.validelements > 0.05]
+testset <- testset[, p.validelements > 0.05]
+
+dataset <- dataset[-c(1:7)]
+testset <- testset[-c(1:7)]
+```
+
+The final data.frame now have the following sizes:
+
+```{r, echo=FALSE}
+dim(dataset)
+dim(testset)
+```
+
+As we can see, the dataset dimension, and so its complexity, has been reduced make it also more parsimonious in its analisys.
+
+
+```{r, echo=FALSE}
+percentageDataset <- round(prop.table(table(dataset$classe)) * 100,1)
+c1 <- cbind(freq.dataset=table(dataset$classe), percentage = percentageDataset)
+```
+
+### Creating Test and Validation Dataset
+
+We split the `dataset` in two, $70%$ of which will be used to train the different models and $20%$ for validation. 
+
+```{r}
+set.seed(123)
+
+inTrain <- createDataPartition(dataset$classe, p = 0.7, list = FALSE)
+train.set <- dataset[inTrain,]
+validation.set <- dataset[-inTrain,]
+
+dim(train.set)
+dim(validation.set)
+```
+
+```{r, echo=FALSE}
+percentageTraining <- round(prop.table(table(train.set$classe)) * 100, 1)
+c2 <- cbind(freq.training=table(train.set$classe), 
+            percentage.training = percentageTraining)
+
+```
+
+The target variable for our analysis is the feature `classe` that shows the following distribution. 
+
+```{r, echo=FALSE}
+percentageTesting <- round(prop.table(table(validation.set$classe)) * 100,1)
+c3 <- cbind(freq.validation=table(validation.set$classe), percentage.Testing = percentageTesting)
+ctot <- cbind(c1, c2, c3)
+
+knitr::kable(ctot, 
+             caption = "Percentage of classes frequencies in the different datasets",
+             col.names = c("Freq Dataset", "%", "Freq Training set", "%", "Freq Testing set", "%"))
+```
+
+The class distribution is almost balanced except for the Class `A` that contains a slight higher number of samples.
+As we can see the Class distribuition has been preserved by the `createDataPartition` function.
+
