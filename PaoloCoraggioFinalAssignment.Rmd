@@ -183,6 +183,104 @@ conf.matrixCT <- confusionMatrix(predict(mod.CT,
                                  validation.set$classe)
 
 
-round(conf.matrixCT$overall, 2)
-round(conf.matrixCT$byClass, 2)
+# round(conf.matrixCT$overall, 2)
+knitr::kable(t(round(conf.matrixCT$overall, 3)))
+# round(conf.matrixCT$byClass, 2)
 ```
+
+## Random Forest
+
+
+```{r, echo=train.set, eval=FALSE}
+set.seed(111)
+
+start.time <- Sys.time()
+mod.RF <- train(classe ~.,
+                data = train.set,
+                method = 'rf',
+                trControl = control,
+                metric = metric,
+                tuneLength = 25)
+
+end.time <- Sys.time()
+timeRF.taken <- end.time - start.time
+timeRF.taken
+
+save(mod.RF, file = "modRF.RData")
+save(timeRF.taken, file = "timeRF.RData")
+```
+
+Gives the following accuracy:
+
+```{r, echo=FALSE}
+load("modRF.RData")
+conf.matrixRF <- confusionMatrix(predict(mod.RF, validation.set), 
+                validation.set$classe)
+
+#round(conf.matrixRF$overall, 2)
+knitr::kable(t(round(conf.matrixRF$overall, 3)))
+# conf.matrixRF$byClass
+```
+
+
+## Boosting
+
+```{r, echo=TRUE, eval=FALSE}
+set.seed(111)
+
+start.time <- Sys.time()
+mod.Boosting <- train(classe ~.,
+                      data = train.set,
+                      method = "gbm",
+                      trControl = control,
+                      metric = metric,
+                      verbose = FALSE)
+
+end.time <- Sys.time()
+time.Boosting <- end.time - start.time
+time.Boosting
+```
+
+With accuracy:
+
+```{r, echo=FALSE}
+load("modBoosting.RData")
+conf.matrixBoosting <- confusionMatrix(predict(mod.Boosting, validation.set), 
+                validation.set$classe)
+
+knitr::kable(t(round(conf.matrixBoosting$overall,3)))
+#conf.matrixBoosting$byClass
+
+# ggplot(mod.Boosting)
+#plot(varImp(mod.Boosting), top = 10)
+```
+
+### Bagging
+
+```{r, echo = TRUE, eval=FALSE}
+set.seed(111)
+
+start.time <- Sys.time()
+mod.Bagging <- train(classe ~.,
+                     data = train.set,
+                     method = "treebag",
+                     trControl = control,
+                     metric = metric)
+
+end.time <- Sys.time()
+time.Bagging <- end.time - start.time
+```
+
+```{r, echo=FALSE}
+load("modBagging.RData")
+conf.matrixBagging <- confusionMatrix(predict(mod.Bagging, validation.set), 
+            validation.set$classe)
+
+knitr::kable(t(round(conf.matrixBagging$overall,3)))
+# conf.matrixBagging$byClass
+#plot(varImp(mod.Bagging), top =10)
+```
+
+# Choosing the model
+
+

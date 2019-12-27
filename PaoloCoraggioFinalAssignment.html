@@ -512,22 +512,153 @@ time.takenCT
 
 save(mod.CT, file = &quot;modeCT.RData&quot;)
 save(time.takenCT, file = &quot;timeCT.RData&quot;)</code></pre>
-<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
-##           0.81           0.76           0.80           0.82           0.28 
-## AccuracyPValue  McnemarPValue 
-##           0.00           0.00</code></pre>
-<pre><code>##          Sensitivity Specificity Pos Pred Value Neg Pred Value Precision Recall
-## Class: A        0.92        0.95           0.89           0.97      0.89   0.92
-## Class: B        0.69        0.95           0.78           0.93      0.78   0.69
-## Class: C        0.86        0.91           0.67           0.97      0.67   0.86
-## Class: D        0.78        0.95           0.74           0.96      0.74   0.78
-## Class: E        0.73        1.00           0.98           0.94      0.98   0.73
-##            F1 Prevalence Detection Rate Detection Prevalence Balanced Accuracy
-## Class: A 0.90       0.28           0.26                 0.29              0.93
-## Class: B 0.73       0.19           0.13                 0.17              0.82
-## Class: C 0.75       0.17           0.15                 0.22              0.88
-## Class: D 0.76       0.16           0.13                 0.17              0.86
-## Class: E 0.84       0.18           0.13                 0.14              0.86</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Accuracy</th>
+<th align="right">Kappa</th>
+<th align="right">AccuracyLower</th>
+<th align="right">AccuracyUpper</th>
+<th align="right">AccuracyNull</th>
+<th align="right">AccuracyPValue</th>
+<th align="right">McnemarPValue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.81</td>
+<td align="right">0.76</td>
+<td align="right">0.8</td>
+<td align="right">0.82</td>
+<td align="right">0.28</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="random-forest" class="section level2">
+<h2>Random Forest</h2>
+<pre class="r"><code>set.seed(111)
+
+start.time &lt;- Sys.time()
+mod.RF &lt;- train(classe ~.,
+                data = train.set,
+                method = &#39;rf&#39;,
+                trControl = control,
+                metric = metric,
+                tuneLength = 25)
+
+end.time &lt;- Sys.time()
+timeRF.taken &lt;- end.time - start.time
+timeRF.taken
+
+save(mod.RF, file = &quot;modRF.RData&quot;)
+save(timeRF.taken, file = &quot;timeRF.RData&quot;)</code></pre>
+<p>Gives the following accuracy:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Accuracy</th>
+<th align="right">Kappa</th>
+<th align="right">AccuracyLower</th>
+<th align="right">AccuracyUpper</th>
+<th align="right">AccuracyNull</th>
+<th align="right">AccuracyPValue</th>
+<th align="right">McnemarPValue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.99</td>
+<td align="right">0.99</td>
+<td align="right">0.99</td>
+<td align="right">1</td>
+<td align="right">0.28</td>
+<td align="right">0</td>
+<td align="right">NaN</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="boosting" class="section level2">
+<h2>Boosting</h2>
+<pre class="r"><code>set.seed(111)
+
+start.time &lt;- Sys.time()
+mod.Boosting &lt;- train(classe ~.,
+                      data = train.set,
+                      method = &quot;gbm&quot;,
+                      trControl = control,
+                      metric = metric,
+                      verbose = FALSE)
+
+end.time &lt;- Sys.time()
+time.Boosting &lt;- end.time - start.time
+time.Boosting</code></pre>
+<p>With accuracy:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Accuracy</th>
+<th align="right">Kappa</th>
+<th align="right">AccuracyLower</th>
+<th align="right">AccuracyUpper</th>
+<th align="right">AccuracyNull</th>
+<th align="right">AccuracyPValue</th>
+<th align="right">McnemarPValue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.96</td>
+<td align="right">0.96</td>
+<td align="right">0.96</td>
+<td align="right">0.97</td>
+<td align="right">0.28</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<div id="bagging" class="section level3">
+<h3>Bagging</h3>
+<pre class="r"><code>set.seed(111)
+
+start.time &lt;- Sys.time()
+mod.Bagging &lt;- train(classe ~.,
+                     data = train.set,
+                     method = &quot;treebag&quot;,
+                     trControl = control,
+                     metric = metric)
+
+end.time &lt;- Sys.time()
+time.Bagging &lt;- end.time - start.time</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Accuracy</th>
+<th align="right">Kappa</th>
+<th align="right">AccuracyLower</th>
+<th align="right">AccuracyUpper</th>
+<th align="right">AccuracyNull</th>
+<th align="right">AccuracyPValue</th>
+<th align="right">McnemarPValue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.984</td>
+<td align="right">0.98</td>
+<td align="right">0.981</td>
+<td align="right">0.987</td>
+<td align="right">0.284</td>
+<td align="right">0</td>
+<td align="right">0.001</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 
