@@ -2,9 +2,7 @@
 title: "Practical Machine Learning - Final Assignment"
 author: "Paolo Coraggio"
 date: "27/12/2019"
-output:
-  html_document: default
-  word_document: default
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
@@ -17,18 +15,23 @@ library(ggplot2)
 
 # Project Outline
 
-The goal of the final assignment is to use data from accelerometers placed on the belt, forearm, arm, and dumbell of 6 participants of an experiment to build a predictive model about the manner in which they did the exercise. 
+For the Coursera Practical Machine Learning final assignment I designed and implemented a model using data from accelerometers placed on the belt, forearm, arm, and dumbell of 6 participants of an experiment to predict the manner in which they did the exercise. 
 
+Using the data collected in http://groupware.les.inf.puc-rio.br/har, 4 different predictive models (namely using Regression Tree, Random Forest, Bagging and Boosting algorithm) have been built and compared using a similar setting. Then, the model that resulted with higerh accuracy was further improved and, finally, used on the test dataset. 
 
-In order to fulfil the goal, the data collected in http://groupware.les.inf.puc-rio.br/har were loaded explored and filtered. Then, 4 different predictive models (using Regression Tree, Random Forest, Bagging and Boosting algorithm) build and compared using a similar setting. The model that resulted with higerh accuracy was further improved and, finally, used on the test dataset. 
+The workflow of this project is basically:
 
-This final report will describe how the model was built how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+* [loading and filtering the data](#exploratory-data-analysis)
+* [creating a testing and validating test](#test-and-validation-dataset)
+* [building four different models and calculating their accuracy against the validation set](#predictive-models-for-the-dataset)
+* [choosing the final model](#choosing-the-model)
+* [using the final model on the provodided test set](#applying-the-model-to-the-test-set)
 
-## Exploratory data analysis
+# Exploratory data analysis
 
 In order to build the predective model, the 
 
-### Loading the data 
+## Loading the data 
 
 The main source of the data is http://groupware.les.inf.puc-rio.br/har. The data were downloaded in a local folder and then loaded in two different datasets: `dataset` for the training and `testset` for the testing sets
 
@@ -46,7 +49,7 @@ dim(testset)
 
 The `dataset` data frame consists of $19622$ datapoint of $160$ recorded features and the `testset` it's just $20$ data points. 
 
-### Exploratoring Data Analysis and Feature Extraction
+## Feature Extraction
 
 The first step is to check what is the percentage of available data for each feature as the data.frame columns may contain not valid elements. I created a `validelements` function that, for each data.frame column, count their valid elements (i.e. not empty, NaN or `#DIV/0!`). I run the function on the `dataset` data.frame.
 
@@ -101,7 +104,7 @@ percentageDataset <- round(prop.table(table(dataset$classe)) * 100,1)
 c1 <- cbind(freq.dataset=table(dataset$classe), percentage = percentageDataset)
 ```
 
-### Creating Test and Validation Dataset
+# Test and Validation Dataset
 
 We split the `dataset` in two, $70 \%$ of which will be used to train the different models and $30 \%$ for validating them. 
 
@@ -138,7 +141,11 @@ knitr::kable(ctot,
 The class distribution is almost balanced except for the Class `A` that contains a slight higher number of samples.
 As we can see the Class distribuition has been preserved by the `createDataPartition` function.
 
-# Model Cross Validation
+# Predictive models for the dataset
+
+This section is about how 4 different predictive models have been designed and implemented in order to chose the most promising one
+
+## Cross Validation
 
 As we will compare different algorithms, a preset Cross Validation parameter is set for all different models. A basic cross validation choise for this kind of dataset is 5-fold cross-validation to estimate accuracy. In order to seek a better estimate, each algorithm will be repeated 3 times.  
 
@@ -189,7 +196,6 @@ conf.matrixCT <- confusionMatrix(predict(mod.CT,
                                          newdata = validation.set),
                                  validation.set$classe)
 
-
 # round(conf.matrixCT$overall, 2)
 knitr::kable(t(round(conf.matrixCT$overall, 3)))
 # round(conf.matrixCT$byClass, 2)
@@ -233,7 +239,6 @@ knitr::kable(t(round(conf.matrixRF$overall, 3)))
 # conf.matrixRF$byClass
 ```
 
-
 ## Boosting
 
 ```{r, echo=TRUE, eval=FALSE}
@@ -254,19 +259,20 @@ time.Boosting
 
 With accuracy:
 
+```{r, eval=FALSE}
+round(confusionMatrix(predict(mod.Boosting, validation.set), 
+                validation.set$classe)$overall,3)
+```
+
 ```{r, echo=FALSE}
 load("modBoosting.RData")
 conf.matrixBoosting <- confusionMatrix(predict(mod.Boosting, validation.set), 
                 validation.set$classe)
 
 knitr::kable(t(round(conf.matrixBoosting$overall,3)))
-#conf.matrixBoosting$byClass
-
-# ggplot(mod.Boosting)
-#plot(varImp(mod.Boosting), top = 10)
 ```
 
-### Bagging
+## Bagging
 
 ```{r, echo = TRUE, eval=FALSE}
 set.seed(111)
@@ -280,7 +286,12 @@ mod.Bagging <- train(classe ~.,
 
 end.time <- Sys.time()
 time.Bagging <- end.time - start.time
+
+round(confusionMatrix(predict(mod.Bagging, validation.set), 
+            validation.set$classe)$overall,3)
 ```
+
+With an accuracy:
 
 ```{r, echo=FALSE}
 load("modBagging.RData")
@@ -344,7 +355,6 @@ mod.RFfinal <- train(classe ~., data = train.set,
 confusionMatrix(predict(mod.RFfinal, validation.set), 
             validation.set$classe)$overall
 
-
 ```
 ```{r, echo=FALSE}
 load("modRFfinal.RData")
@@ -364,7 +374,7 @@ knitr::kable(round(conf.RFFinal$byClass, 3))
 
 As we can see from the table, the improvement is really minimal in terms of accuracy although the algorithm speed is improved a lot.
 
-The following plot shows also the top 10 features in terms of importance.
+The following plot shows also the top 15 features in terms of importance.
 
 ```{r, echo=FALSE}
 plot(varImp(mod.RFfinal10), top = 15)
