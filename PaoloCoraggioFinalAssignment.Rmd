@@ -2,7 +2,10 @@
 title: "Practical Machine Learning - Final Assignment"
 author: "Paolo Coraggio"
 date: "27/12/2019"
-output: md_document
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -29,11 +32,11 @@ The workflow of this project is basically:
 
 # Exploratory data analysis
 
-In order to build the predective model, the 
+This section describes how the data has been loaded into R data.frame structures and, from the raw database, the process for extracting the features to build the predictive models.
 
 ## Loading the data 
 
-The main source of the data is http://groupware.les.inf.puc-rio.br/har. The data were downloaded in a local folder and then loaded in two different datasets: `dataset` for the training and `testset` for the testing sets
+The main source of the data is http://groupware.les.inf.puc-rio.br/har. The data were downloaded in a local folder and then loaded in two different datasets: `dataset` for the training and `testset` for the test sets.
 
 ```{r, echo=FALSE}
 dataset <- read.csv('./Data/pml-training.csv')
@@ -47,11 +50,11 @@ dim(dataset)
 dim(testset)
 ```
 
-The `dataset` data frame consists of $19622$ datapoint of $160$ recorded features and the `testset` it's just $20$ data points. 
+The `dataset` data frame consists of $19622$ datapoint of $160$ recorded features and the `testset` it's just $20$ data points. `testset` contains 20 unknown test cases to be predicted by the model. 
 
 ## Feature Extraction
 
-The first step is to check what is the percentage of available data for each feature as the data.frame columns may contain not valid elements. I created a `validelements` function that, for each data.frame column, count their valid elements (i.e. not empty, NaN or `#DIV/0!`). I run the function on the `dataset` data.frame.
+The first step has been to check what is the percentage of available data for each feature as the data.frame columns may contain not valid elements. A `validelements` function has been created that, for each data.frame column, count their valid elements (i.e. not empty, NaN or `#DIV/0!`). The function has been used on the `dataset` data.frame.
 
 ```{r, echo=FALSE, fig.align="centre", fig.height=3.0}
 p.validelements <- c()
@@ -67,9 +70,9 @@ plot(p.validelements, pch = 3, col = "darkgrey",
      xlab = "Feature Index", ylab = "Percentage of valid values")
 ```
 
-The plot shows that data.frame variables contain or $100\%$ valide data or very few (less than $5\%$ of valide data). The features containing less the $5/%$ of data will be discharged.
+The plot shows that data.frame variables (features) contain or $100\%$ valide data or very few (less than $5\%$ of valide data). The features containing less the $5\%$ of data will be discharged.
 
-Moreover, we can further exclude the first 7 features as they containg temporal information that has been chosen not to consider as the analysis is not considering a forcastin approach (that would be interesting to study further but it's out of scope the present project).  
+Moreover, the first 7 features contain temporal information that has been chosen not to be considered in this project (a forcasting approach would be more suitable).  
 
 ```{r, eval=FALSE}
 dataset <- dataset[, p.validelements > 0.05]
@@ -96,8 +99,7 @@ dim(dataset)
 dim(testset)
 ```
 
-As we can see, the dataset dimension, and so its complexity, has been reduced make it also more parsimonious in its analisys.
-
+As we can see, the dataset dimension, and so its complexity, has been reduced making also more parsimonious its analisys.
 
 ```{r, echo=FALSE}
 percentageDataset <- round(prop.table(table(dataset$classe)) * 100,1)
@@ -106,7 +108,7 @@ c1 <- cbind(freq.dataset=table(dataset$classe), percentage = percentageDataset)
 
 # Test and Validation Dataset
 
-We split the `dataset` in two, $70 \%$ of which will be used to train the different models and $30 \%$ for validating them. 
+The `dataset` has been splitted in two, $70\%$ to train the different models and $30 \%$ for validating them. 
 
 ```{r}
 set.seed(123)
@@ -147,7 +149,7 @@ This section is about how 4 different predictive models have been designed and i
 
 ## Cross Validation
 
-As we will compare different algorithms, a preset Cross Validation parameter is set for all different models. A basic cross validation choise for this kind of dataset is 5-fold cross-validation to estimate accuracy. In order to seek a better estimate, each algorithm will be repeated 3 times.  
+As we will compare different algorithms, a preset Cross Validation parameter is set for all different models. Since the training dataset contains a sufficient number of points, a basic cross validation choise for this kind of dataset is 5-fold cross-validation to estimate accuracy. In order to seek a better estimate, each algorithm will be repeated 3 times on each folder.  
 
 ```{r, eval=F, echo=T}
 control <- trainControl(method = "repeatedcv", 
@@ -388,7 +390,7 @@ Finally, the model is applied to predict the data in the test set.
 predict(mod.RF, newdata = testset)
 ```
 
-# References and Future work
+# References and Future Work
 
 * The data used are part of the [WLE dataset](http://groupware.les.inf.puc-rio.br/har )
 * For the Random Forest tuning with caret I read [James Brownlee blog page] (https://machinelearningmastery.com/tune-machine-learning-algorithms-in-r/)
