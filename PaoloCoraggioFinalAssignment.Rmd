@@ -2,7 +2,9 @@
 title: "Practical Machine Learning - Final Assignment"
 author: "Paolo Coraggio"
 date: "27/12/2019"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -103,7 +105,7 @@ c1 <- cbind(freq.dataset=table(dataset$classe), percentage = percentageDataset)
 
 ### Creating Test and Validation Dataset
 
-We split the `dataset` in two, $70%$ of which will be used to train the different models and $20%$ for validation. 
+We split the `dataset` in two, $70 \%$ of which will be used to train the different models and $30 \%$ for validating them. 
 
 ```{r}
 set.seed(123)
@@ -173,6 +175,13 @@ save(mod.CT, file = "modeCT.RData")
 save(time.takenCT, file = "timeCT.RData")
 ```
 
+With an accuracy measured on the validation set
+
+```{r, eval = FALSE}
+confusionMatrix(predict(mod.CT,newdata = validation.set),
+                validation.set$classe)$overall
+```
+
 ```{r, echo=FALSE, fig.align="centre"}
 set.seed(111)
 
@@ -189,7 +198,6 @@ knitr::kable(t(round(conf.matrixCT$overall, 3)))
 ```
 
 ## Random Forest
-
 
 ```{r, echo=train.set, eval=FALSE}
 set.seed(111)
@@ -211,6 +219,11 @@ save(timeRF.taken, file = "timeRF.RData")
 ```
 
 Gives the following accuracy:
+
+```{r, eval=FALSE}
+confusionMatrix(predict(mod.RF, validation.set), 
+                validation.set$classe)$overall
+```
 
 ```{r, echo=FALSE}
 load("modRF.RData")
@@ -283,4 +296,87 @@ knitr::kable(t(round(conf.matrixBagging$overall,3)))
 
 # Choosing the model
 
+As we can see from the accurancy measured on the testing set, the Random Forest approach looks preferible with respect the other ones. The accuracy is already quite high (about $99.450 \%$). The next model tries to tune further the Random Forest model by estimating a more approrpiate value for `ntree` and `mtry` parameters using a random search. We will use the model to estimate the parameters' tree as well.
 
+```{r, eval=FALSE}
+controlRS <- trainControl(method="repeatedcv", 
+                          number=10, 
+                          repeats=3, 
+                          search="random",
+                          verboseIter = TRUE)
+set.seed(111)
+
+rf_random <- train(classe~., 
+                   data=train.set, 
+                   method="rf", 
+                   metric=metric, 
+                   tuneLength=20, 
+                   trControl=controlRS)
+
+save(rf_random, file = "rf_random.RData")
+```
+
+```{r, echo=FALSE}
+load("rf_random.RData")
+
+plot(rf_random)
+```
+
+```{r, echo=FALSE}
+plot(rf_random$finalModel)
+
+rf_random$finalModel.legend <- if (is.null(rf_random$finalModel$test$err.rate)) {colnames(rf_random$finalModel$err.rate)} else {colnames(rf_random$finalModel$test$err.rate)}
+
+legend("top", cex =0.7, legend=rf_random$finalModel.legend, lty=c(1,2,3,4,5), col=c(1,2,3,4,5), horiz=T)
+```
+
+The latest 2 plots suggests that a `ntree` = 100 and `mtry` = 10 should speed up the processing while assuring a better accuracy. The following is the model with these parameters and its accuracy on the testing set.
+
+```{r, eval = FALSE}
+set.seed(111)
+mod.RFfinal <- train(classe ~., data = train.set,
+                     method = "rf",
+                     ntree = 100,
+                     tuneGrid = data.frame(mtry=10),
+                     trControl = trainControl(method = "repeatedcv", 
+                                              number=10,
+                                              repeats=3,
+                                              verboseIter = TRUE))
+
+confusionMatrix(predict(mod.RFfinal, validation.set), 
+            validation.set$classe)$overall
+
+
+```
+```{r, echo=FALSE}
+load("modRFfinal.RData")
+
+conf.RFFinal <- confusionMatrix(predict(mod.RFfinal10, validation.set), 
+            validation.set$classe)
+
+knitr::kable(t(round(conf.RFFinal$overall,3)))
+#knitr::kable(t(round(conf.RFFinal$byClass,3)))
+```
+
+And further by class.
+
+```{r, echo=FALSE}
+knitr::kable(round(conf.RFFinal$byClass, 3))
+```
+
+As we can see from the table, the improvement is really minimal in terms of accuracy although the algorithm speed is improved a lot.
+
+The following plot shows also the top 10 features in terms of importance.
+
+```{r, echo=FALSE}
+plot(varImp(mod.RFfinal10), top = 15)
+```
+
+# Applying the model to the test set
+
+Finally, the model is applied to predict the data in the test set.
+
+```{r}
+predict(mod.RF, newdata = testset)
+#knitr::kable(t(predict(mod.RF, newdata = testset)))
+```
