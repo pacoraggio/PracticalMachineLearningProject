@@ -27,7 +27,9 @@ The workflow of this project is basically:
 Exploratory data analysis
 =========================
 
-In order to build the predective model, the
+This section describes how the data has been loaded into R data.frame
+structures and, from the raw database, the process for extracting the
+features to build the predictive models.
 
 Loading the data
 ----------------
@@ -36,7 +38,7 @@ The main source of the data is
 <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>.
 The data were downloaded in a local folder and then loaded in two
 different datasets: `dataset` for the training and `testset` for the
-testing sets
+test sets.
 
 The datasets have the following size:
 
@@ -45,27 +47,27 @@ The datasets have the following size:
     ## [1]  20 160
 
 The `dataset` data frame consists of 19622 datapoint of 160 recorded
-features and the `testset` it’s just 20 data points.
+features and the `testset` it’s just 20 data points. `testset` contains
+20 unknown test cases to be predicted by the model.
 
 Feature Extraction
 ------------------
 
-The first step is to check what is the percentage of available data for
-each feature as the data.frame columns may contain not valid elements. I
-created a `validelements` function that, for each data.frame column,
-count their valid elements (i.e. not empty, NaN or `#DIV/0!`). I run the
-function on the `dataset` data.frame.
+The first step has been to check what is the percentage of available
+data for each feature as the data.frame columns may contain not valid
+elements. A `validelements` function has been created that, for each
+data.frame column, count their valid elements (i.e. not empty, NaN or
+`#DIV/0!`). The function has been used on the `dataset` data.frame.
 
 <img src="PaoloCoraggioFinalAssignment_files/figure-markdown_strict/unnamed-chunk-3-1.png"  />
 
-The plot shows that data.frame variables contain or 100% valide data or
-very few (less than 5% of valide data). The features containing less the
-5/ of data will be discharged.
+The plot shows that data.frame variables (features) contain or 100%
+valide data or very few (less than 5% of valide data). The features
+containing less the 5% of data will be discharged.
 
-Moreover, we can further exclude the first 7 features as they containg
-temporal information that has been chosen not to consider as the
-analysis is not considering a forcastin approach (that would be
-interesting to study further but it’s out of scope the present project).
+Moreover, the first 7 features contain temporal information that has
+been chosen not to be considered in this project (a forcasting approach
+would be more suitable).
 
     dataset <- dataset[, p.validelements > 0.05]
     testset <- testset[, p.validelements > 0.05]
@@ -82,13 +84,13 @@ The final data.frame now have the following sizes:
     ## [1] 20 53
 
 As we can see, the dataset dimension, and so its complexity, has been
-reduced make it also more parsimonious in its analisys.
+reduced making also more parsimonious its analisys.
 
 Test and Validation Dataset
 ===========================
 
-We split the `dataset` in two, 70% of which will be used to train the
-different models and 30% for validating them.
+The `dataset` has been splitted in two, 70% to train the different
+models and 30% for validating them.
 
     set.seed(123)
 
@@ -183,10 +185,11 @@ Cross Validation
 ----------------
 
 As we will compare different algorithms, a preset Cross Validation
-parameter is set for all different models. A basic cross validation
-choise for this kind of dataset is 5-fold cross-validation to estimate
+parameter is set for all different models. Since the training dataset
+contains a sufficient number of points, a basic cross validation choise
+for this kind of dataset is 5-fold cross-validation to estimate
 accuracy. In order to seek a better estimate, each algorithm will be
-repeated 3 times.
+repeated 3 times on each folder.
 
     control <- trainControl(method = "repeatedcv", 
                             number = 5, 
@@ -572,7 +575,7 @@ Finally, the model is applied to predict the data in the test set.
     ##  [1] B A B A A E D B A A B C B A E E A B B B
     ## Levels: A B C D E
 
-References and Future work
+References and Future Work
 ==========================
 
 -   The data used are part of the [WLE
